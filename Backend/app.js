@@ -1,17 +1,15 @@
 const dotenv=require('dotenv');
 dotenv.config();
-const express=require('express');
-
-const app=express();
+const express =require('express');
 const cors=require('cors');
+const app = express();
+const connectToDb=require('./db/db');
+connectToDb();
 
 app.use(cors());
 
-app.get('/',(req, res) => {
+app.get('/', (req, res) => {
     res.send('Hello World');
 })
-
-const MONGO_URI = process.env.MONGO_URI;
-
 
 module.exports = app;
