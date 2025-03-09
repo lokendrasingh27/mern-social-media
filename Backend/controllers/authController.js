@@ -1,5 +1,5 @@
 const User = require('../models/User');
-const bcrypt = require('bcryptjs');
+const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { validationResult } = require('express-validator');
 
@@ -34,31 +34,28 @@ module.exports.registerUser = async (req, res) => {
   }
 };
 
+
 module.exports.loginUser = async (req, res) => {
-   
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
-
-  const {email, password} = req.body;
-  console.log(req.body)
-  
-  try{
-    let user=await User.find({email})
-    if(!user) return res.status(400).json({message:'Invalid credentials'});
-
-    const hashedPassword = user.password;
-    console.log("Hashed Password:", hashedPassword);
-
+  const { email, password } = req.body;
+  // console.log(password)
+  try {
+    let user = await User.findOne({
+      email,
+    });
+    // console.log(user.password)
+    if (!user) return res.status(400).json({ message: 'Invalid credentials' });
+    const isMatch = await bcrypt.compare(password, user.password);
+    // console.log(isMatch)
+    if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    res.json({ token, userId: user._id, username: user.username });
     
-    console.log(user)
+}catch(error){
+  res.status(500).json({ message: 'Server error', error });
+}
 
-    const isMatch=bcrypt.compare(password,user.password)
-  if(!isMatch) return res.status(400).json({message:'Invalid credentials'});
+}
 
-  const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' })
-  res.json({ token, userId: user._id, username: user.username });
-  } catch(error){
-    res.status(500).json({ message: 'Server error', error }); 
- }
 
-};
